@@ -74,7 +74,11 @@ public class ExpenseTrackerView extends JFrame {
     // Layout components
     tabbedPanel = new JTabbedPane();
     dataPanelView = new DataPanelView();
+    dataPanelView.getAccessibleContext().setAccessibleName("Transaction Data panel");
+    dataPanelView.getAccessibleContext().setAccessibleDescription("View the transactions saved to the current session. Add transaction according with appropriate amount and category.");
     analysisPanelView = new AnalysisPanelView();
+    analysisPanelView.getAccessibleContext().setAccessibleName("Transaction analysis panel");
+    analysisPanelView.getAccessibleContext().setAccessibleDescription("Generate an overview of transactions by selecting a time period and clicking analyze.");
     tabbedPanel.add("Data", dataPanelView);
     tabbedPanel.add("Analyis", analysisPanelView);
     add(tabbedPanel);
@@ -107,6 +111,8 @@ public class ExpenseTrackerView extends JFrame {
   }
   
   public void displayErrorMessage(String message) {
+    this.getAccessibleContext().setAccessibleName("Error: invalid input.");
+    this.getAccessibleContext().setAccessibleDescription(message);
     JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
   } 
 
