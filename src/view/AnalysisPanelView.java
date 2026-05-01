@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale.Category;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -108,6 +109,15 @@ public class AnalysisPanelView extends JPanel
 
 		return chartDataModel;
 	}
+
+	protected static class ChartResult {
+		public final CategoryChart chart;
+		public final String accessibleMessage;
+		public ChartResult(CategoryChart chart, String accessibleMessage) {
+			this.chart = chart;
+			this.accessibleMessage = accessibleMessage;
+		}
+	}
 	
 	/**
 	 * Creates a bar chart to display the total cost 
@@ -116,7 +126,7 @@ public class AnalysisPanelView extends JPanel
 	 * @param model Represents the model's current state
 	 * @return A bar chart displaying the total cost per category
 	 */
-	protected CategoryChart createCategoryChart(ExpenseTrackerModel model) {
+	protected ChartResult createCategoryChart(ExpenseTrackerModel model) {
 		Map<String,ExpenseTrackerModel> categorySummary = DataVizUtils.computeCategorySummary(model, this.timeWindowChooser.getSelectedIndex());
 		// Perform input validation to check that there were 
 		// transactions in the specified time window.
@@ -141,18 +151,20 @@ public class AnalysisPanelView extends JPanel
 
 		// Series
 		List<Double> xAxisSeries = new ArrayList<Double>();
+		String accessibleMessage = "";
 		for (int i = 0; i < InputValidation.VALID_CATEGORIES.length; i++) {
 			ExpenseTrackerModel currentCategoryModel = categorySummary.get(InputValidation.VALID_CATEGORIES[i]);
 			Double currentCategoryTotalCost = 0.0;
 			if (currentCategoryModel != null) {
 				currentCategoryTotalCost = currentCategoryModel.computeTransactionsTotalCost();
+				accessibleMessage += currentCategoryTotalCost + " dollars in " + InputValidation.VALID_CATEGORIES[i] + ", ";
 			}
 			xAxisSeries.add(currentCategoryTotalCost);
 		}
 		chart.addSeries(CHART_TITLE, Arrays.asList(InputValidation.VALID_CATEGORIES), xAxisSeries);
 		chart.setTitle(CHART_TITLE);
 		
-		return chart;
+		return new ChartResult(chart, accessibleMessage);
 	}
 
 	/**
@@ -173,13 +185,18 @@ public class AnalysisPanelView extends JPanel
 				this.dataVizPanel.remove(this.chartPanel);
 				this.chartPanel = null;
 			}
-			CategoryChart categoryChart = this.createCategoryChart(model);
+			ChartResult chartResult = this.createCategoryChart(model);
+			CategoryChart categoryChart = chartResult.chart;
+			String accessibleDescription = chartResult.accessibleMessage;
+			String accessibleName = "Table displays " + CHART_TITLE + " within " + DataAnalysisTimeWindow.values()[this.timeWindowChooser.getSelectedIndex()] + ".";
 			if (categoryChart == null) {
 				this.messageLabel.setText(NO_TRANSACTIONS_ERROR_MESSAGE);
 				this.messageLabel.setVisible(true);				
 			}
 			else {
 				this.chartPanel = new XChartPanel<>(categoryChart);
+				this.chartPanel.getAccessibleContext().setAccessibleName(accessibleName);
+				this.chartPanel.getAccessibleContext().setAccessibleDescription(accessibleDescription);
 				this.dataVizPanel.add(this.chartPanel, BorderLayout.CENTER);
 				this.dataVizPanel.revalidate();
 				this.dataVizPanel.repaint();
